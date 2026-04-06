@@ -4,54 +4,116 @@ import main.GamePanel;
 import main.Pair;
 
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.Set;
 
 
 public class Own {
+    private static final int SEARCH_DEPTH = 2;
+    private static final int MAX_CANDIDATE_MOVES = 16;
+    private static final int SEARCH_RADIUS = 2;
     GamePanel panel;
 
     public Own (GamePanel panel){
         this.panel = panel;
     }
 
-    public void update(){
+    public void update(int botTurn){
         if (!panel.end) {
-            Pair<Integer, Integer> move = bestMove();
-            panel.cellButtons[move.first][move.second].button = true;
+            panel.botThinking = true;
+            panel.botStatus = "thinking";
+            long startMs = System.currentTimeMillis();
+            Pair<Integer, Integer> move = bestMove(botTurn);
+            if (move.first < 0 || move.second < 0) {
+                move = findAnyEmptyMove();
+            }
+            long elapsedMs = System.currentTimeMillis() - startMs;
+            if (move.first >= 0 && move.second >= 0) {
+                panel.botStatus = "doing (" + elapsedMs + "ms)";
+                System.out.println("Bot thinking time: " + elapsedMs + "ms. Move: (" + move.first + ", " + move.second + ")");
+                panel.cellButtons[move.first][move.second].button = true;
+            } else {
+                panel.botStatus = "no valid move";
+                System.out.println("Bot has no valid move.");
+            }
+            panel.botThinking = false;
         }
     }
 
-    public ArrayList<Pair> getAvailableMoves(){
-        ArrayList<Pair> availableMoves = new ArrayList<>();
-        Pair move1 = panel.history.get(panel.history.size() - 1);
-        Pair move2 = new Pair(-1, -1);
+    private Pair<Integer, Integer> findAnyEmptyMove() {
+        for (int i = 0; i < panel.screenRow - 1; i++) {
+            for (int j = 0; j < panel.screenCol; j++) {
+                if (panel.Board[i][j] == 0) {
+                    return new Pair<>(i, j);
+                }
+            }
+        }
+        return new Pair<>(-1, -1);
+    }
+
+    public ArrayList<Pair<Integer, Integer>> getAvailableMoves(){
+        ArrayList<Pair<Integer, Integer>> availableMoves = new ArrayList<>();
+        Set<String> visited = new HashSet<>();
+        if (panel.history.size() == 0){
+            availableMoves.add(new Pair<>(panel.screenRow / 2, panel.screenCol / 2));
+            return availableMoves;
+        }
+
+        Pair<Integer, Integer> move1 = panel.history.get(panel.history.size() - 1);
+        Pair<Integer, Integer> move2 = new Pair<>(-1, -1);
         if(panel.history.size() > 1) {
             move2 = panel.history.get(panel.history.size() - 2);
         }
 
-        for (int i = (int)move1.first - 5; i <= (int)move1.first + 5; i++){
-            for (int j = (int)move1.second - 5; j <= (int)move1.second + 5; j++){
-                if (i >= 0 && i < panel.screenRow - 1 && j >= 0 && j < panel.screenCol){
-                    if(panel.Board[i][j] == 0) {
-                        availableMoves.add(new Pair(i, j));
+        for (int i = move1.first - SEARCH_RADIUS; i <= move1.first + SEARCH_RADIUS; i++){
+            for (int j = move1.second - SEARCH_RADIUS; j <= move1.second + SEARCH_RADIUS; j++){
+                if (i >= 0 && i < panel.screenRow - 1 && j >= 0 && j < panel.screenCol && panel.Board[i][j] == 0){
+                    String key = i + "," + j;
+                    if (visited.add(key)) {
+                        availableMoves.add(new Pair<>(i, j));
                     }
                 }
             }
         }
 
-        for (int i = (int)move2.first - 5; i <= (int)move2.first + 5; i++){
-            for (int j = (int)move2.second - 5; j <= (int)move2.second + 5; j++){
-                if (i >= 0 && i < panel.screenRow - 1 && j >= 0 && j < panel.screenCol){
-                    if(panel.Board[i][j] == 0) {
-                        availableMoves.add(new Pair(i, j));
+        for (int i = move2.first - SEARCH_RADIUS; i <= move2.first + SEARCH_RADIUS; i++){
+            for (int j = move2.second - SEARCH_RADIUS; j <= move2.second + SEARCH_RADIUS; j++){
+                if (i >= 0 && i < panel.screenRow - 1 && j >= 0 && j < panel.screenCol && panel.Board[i][j] == 0){
+                    String key = i + "," + j;
+                    if (visited.add(key)) {
+                        availableMoves.add(new Pair<>(i, j));
                     }
                 }
             }
+        }
+        availableMoves.sort(Comparator.comparingInt((Pair<Integer, Integer> move) ->
+                -neighborScore(move.first, move.second)));
+        if (availableMoves.size() > MAX_CANDIDATE_MOVES) {
+            return new ArrayList<>(availableMoves.subList(0, MAX_CANDIDATE_MOVES));
         }
         return availableMoves;
     }
 
-    public int minimax(int depth, int alpha, int beta, boolean XPlayer){
-        ArrayList<Pair> availableMoves = getAvailableMoves();
+    private int neighborScore(int i, int j) {
+        int score = 0;
+        for (int di = -1; di <= 1; di++) {
+            for (int dj = -1; dj <= 1; dj++) {
+                if (di == 0 && dj == 0) {
+                    continue;
+                }
+                int ni = i + di;
+                int nj = j + dj;
+                if (ni >= 0 && ni < panel.screenRow - 1 && nj >= 0 && nj < panel.screenCol && panel.Board[ni][nj] != 0) {
+                    score++;
+                }
+            }
+        }
+        return score;
+    }
+
+    public int minimax(int depth, int alpha, int beta, int currentTurn, int botTurn){
+        ArrayList<Pair<Integer, Integer>> availableMoves = getAvailableMoves();
         if (availableMoves.size() == 0){
             return 0;
         }
@@ -60,15 +122,15 @@ public class Own {
             return 0;
         }
 
-        if (XPlayer){
-            int best = -1000;
+        if (currentTurn == botTurn){
+            int best = -1000; // Maximize for bot
             for (Pair <Integer, Integer> move: availableMoves){
-                panel.Board[move.first][move.second] = 1;
-                if (panel.checkWin(move.first, move.second, 1) > 0){
+                panel.Board[move.first][move.second] = currentTurn;
+                if (panel.checkWin(move.first, move.second, currentTurn) > 0){
                     panel.Board[move.first][move.second] = 0;
                     return 1;
                 }
-                best = Math.max(best, minimax(depth - 1, alpha, beta,false));
+                best = Math.max(best, minimax(depth - 1, alpha, beta, -currentTurn, botTurn));
                 panel.Board[move.first][move.second] = 0;
                 alpha = Math.max(alpha, best);
                 if (beta <= alpha){
@@ -78,14 +140,14 @@ public class Own {
             return best;
         }
         else {
-            int best = 1000;
+            int best = 1000; // Minimize for opponent
             for (Pair <Integer, Integer> move: availableMoves){
-                panel.Board[move.first][move.second] = -1;
-                if (panel.checkWin(move.first, move.second, -1) > 0){
+                panel.Board[move.first][move.second] = currentTurn;
+                if (panel.checkWin(move.first, move.second, currentTurn) > 0){
                     panel.Board[move.first][move.second] = 0;
                     return -1;
                 }
-                best = Math.min(best, minimax(depth - 1, alpha, beta,true));
+                best = Math.min(best, minimax(depth - 1, alpha, beta, -currentTurn, botTurn));
                 panel.Board[move.first][move.second] = 0;
                 beta = Math.min(beta, best);
                 if (beta <= alpha){
@@ -96,17 +158,21 @@ public class Own {
         }
     }
 
-    public Pair<Integer, Integer> bestMove(){
-        int bestVal = 1000; // Giá trị tốt nhất ban đầu cho O (tối thiểu hóa)
-        Pair<Integer, Integer> bestMove = new Pair(-1, -1); // Nước đi tốt nhất ban đầu
-        ArrayList<Pair> availableMoves = getAvailableMoves();
+    public Pair<Integer, Integer> bestMove(int botTurn){
+        int bestVal = -1000;
+        Pair<Integer, Integer> bestMove = new Pair<>(-1, -1);
+        ArrayList<Pair<Integer, Integer>> availableMoves = getAvailableMoves();
 
         for (Pair<Integer, Integer> move : availableMoves) {
-            panel.Board[move.first][move.second] = -1; // Giả lập nước đi của O
-            int moveVal = minimax(3, -1000, 1000, true); // Tính giá trị nước đi với độ sâu 2
-            panel.Board[move.first][move.second] = 0; // Hoàn tác nước đi
+            panel.Board[move.first][move.second] = botTurn;
+            if (panel.checkWin(move.first, move.second, botTurn) > 0){
+                panel.Board[move.first][move.second] = 0;
+                return move;
+            }
+            int moveVal = minimax(SEARCH_DEPTH, -1000, 1000, -botTurn, botTurn);
+            panel.Board[move.first][move.second] = 0;
 
-            if (moveVal < bestVal) { // Nếu giá trị tốt hơn (nhỏ hơn), cập nhật nước đi tốt nhất
+            if (moveVal > bestVal) {
                 bestVal = moveVal;
                 bestMove = move;
             }
