@@ -36,6 +36,11 @@ public class CellButton extends Button{
             if (panel.end){
                 button = false;
             }
+            else if ((panel.gamePanelState == 1 && panel.turn == -1)
+                    || (panel.gamePanelState == 2 && panel.turn == 1)
+                    || (panel.gamePanelState == 3)) {
+                button = false;
+            }
             else if (panel.Board[this.i][this.j] != 0){
                 button = false;
             }
