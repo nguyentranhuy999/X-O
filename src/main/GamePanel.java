@@ -29,7 +29,7 @@ public class GamePanel extends Panel {
     public int endX = -1;
     public int endY = -1;
     public boolean botThinking = false;
-    public String botStatus = "";
+    public String botStatus = "idle";
 
     Own own = new Own(this);
 
