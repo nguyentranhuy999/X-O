@@ -26,9 +26,6 @@ public class CellButton extends Button{
                 || (panel.gamePanelState == 3);
         if (isBotTurn) {
             mouseHandle.click = false;
-            mouseHandle.enter = false;
-            mouseHandle.exit = false;
-            return;
         }
         super.buttonUpdate();
     }

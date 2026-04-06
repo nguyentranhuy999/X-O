@@ -210,7 +210,16 @@ public class GamePanel extends Panel {
         boolean lastMoveIsWin = historyIndex == history.size() - 1
                 && historyIndex != -1
                 && history.get(historyIndex).special;
-        if (isBotTurn && !lastMoveIsWin){
+        boolean hasPendingBotMove = false;
+        for (int i = 0; i < screenRow - 1 && !hasPendingBotMove; i++) {
+            for (int j = 0; j < screenCol; j++) {
+                if (cellButtons[i][j].button) {
+                    hasPendingBotMove = true;
+                    break;
+                }
+            }
+        }
+        if (isBotTurn && !lastMoveIsWin && !hasPendingBotMove){
             own.update(turn);
         }
 
