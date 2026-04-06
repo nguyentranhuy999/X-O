@@ -4,7 +4,6 @@ import main.GamePanel;
 import main.Pair;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -70,23 +69,6 @@ public class Own {
         return availableMoves;
     }
 
-    private int neighborScore(int i, int j) {
-        int score = 0;
-        for (int di = -1; di <= 1; di++) {
-            for (int dj = -1; dj <= 1; dj++) {
-                if (di == 0 && dj == 0) {
-                    continue;
-                }
-                int ni = i + di;
-                int nj = j + dj;
-                if (ni >= 0 && ni < panel.screenRow - 1 && nj >= 0 && nj < panel.screenCol && panel.Board[ni][nj] != 0) {
-                    score++;
-                }
-            }
-        }
-        return score;
-    }
-
     public int minimax(int depth, int alpha, int beta, int currentTurn, int botTurn){
         ArrayList<Pair<Integer, Integer>> availableMoves = getAvailableMoves();
         if (availableMoves.size() == 0){
@@ -144,7 +126,7 @@ public class Own {
                 panel.Board[move.first][move.second] = 0;
                 return move;
             }
-            int moveVal = minimax(SEARCH_DEPTH, -1000, 1000, -botTurn, botTurn);
+            int moveVal = minimax(3, -1000, 1000, -botTurn, botTurn);
             panel.Board[move.first][move.second] = 0;
 
             if (moveVal > bestVal) {
