@@ -25,9 +25,6 @@ public class Own {
             panel.botStatus = "thinking";
             long startMs = System.currentTimeMillis();
             Pair<Integer, Integer> move = bestMove(botTurn);
-            if (move.first < 0 || move.second < 0) {
-                move = findAnyEmptyMove();
-            }
             long elapsedMs = System.currentTimeMillis() - startMs;
             if (move.first >= 0 && move.second >= 0) {
                 panel.botStatus = "doing (" + elapsedMs + "ms)";
@@ -39,17 +36,6 @@ public class Own {
             }
             panel.botThinking = false;
         }
-    }
-
-    private Pair<Integer, Integer> findAnyEmptyMove() {
-        for (int i = 0; i < panel.screenRow - 1; i++) {
-            for (int j = 0; j < panel.screenCol; j++) {
-                if (panel.Board[i][j] == 0) {
-                    return new Pair<>(i, j);
-                }
-            }
-        }
-        return new Pair<>(-1, -1);
     }
 
     public ArrayList<Pair<Integer, Integer>> getAvailableMoves(){
