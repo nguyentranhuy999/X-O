@@ -202,8 +202,14 @@ public class GamePanel extends Panel {
         redoButton.update();
 
         // Bot
-        if (turn == -1 && historyIndex == history.size() - 1 && !history.get(history.size() - 1).special){
-            own.update();
+        boolean isBotTurn = (gamePanelState == 1 && turn == -1)
+                || (gamePanelState == 2 && turn == 1)
+                || (gamePanelState == 3);
+        boolean lastMoveIsWin = historyIndex == history.size() - 1
+                && historyIndex != -1
+                && history.get(historyIndex).special;
+        if (isBotTurn && !lastMoveIsWin){
+            own.update(turn);
         }
 
         // Cell
@@ -433,4 +439,3 @@ public class GamePanel extends Panel {
         g2D.dispose();
     }
 }
-
