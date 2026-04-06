@@ -29,6 +29,7 @@ public class UndoButton extends Button{
                 panel.historyIndex--;
 
                 panel.end = false;
+                panel.winner = 0;
                 panel.startX = -1;
                 panel.startY = -1;
                 panel.endX = -1;

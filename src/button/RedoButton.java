@@ -29,6 +29,7 @@ public class RedoButton extends Button{
                 panel.turn = panel.turn * -1;
 
                 panel.end = false;
+                panel.winner = 0;
                 panel.startX = -1;
                 panel.startY = -1;
                 panel.endX = -1;

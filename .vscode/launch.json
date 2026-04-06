@@ -1,0 +1,16 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "Run X-O",
+      "request": "launch",
+      "mainClass": "main.Main",
+      "classPaths": [
+        "${workspaceFolder}/out",
+        "${workspaceFolder}/src"
+      ],
+      "preLaunchTask": "build-xo"
+    }
+  ]
+}

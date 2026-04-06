@@ -24,6 +24,7 @@ public class GamePanel extends Panel {
     public int turn = 1;
     public int checkTie = 0;
     public boolean end = false;
+    public int winner = 0;
     public int startX = -1;
     public int startY = -1;
     public int endX = -1;
@@ -229,9 +230,10 @@ public class GamePanel extends Panel {
                 cellButtons[i][j].update();
                 if (cellButtons[i][j].button){
                     Board[i][j] = turn;
+                    int winResult = checkWin(i, j, this.turn);
 
                     // Hang ngang
-                    if (checkWin(i, j, this.turn) == 1){
+                    if (winResult == 1){
                         for (int a = 1; ; a++) {
                             if (j + a < screenCol) {
                                 if (Board[i][j + a] != turn) {
@@ -264,7 +266,7 @@ public class GamePanel extends Panel {
                     }
 
                     // Hang doc
-                    else if (checkWin(i, j, this.turn) == 2){
+                    else if (winResult == 2){
                         for (int a = 1; ; a++) {
                             if (i + a < screenRow - 1) {
                                 if (Board[i + a][j] != turn) {
@@ -296,7 +298,7 @@ public class GamePanel extends Panel {
                     }
 
                     // Hang cheo 1
-                    else if (checkWin(i, j, this.turn) == 3){
+                    else if (winResult == 3){
                         for (int a = 1; ; a++) {
                             if (i + a < screenRow - 1 && j + a < screenCol) {
                                 if (Board[i + a][j + a] != turn) {
@@ -329,7 +331,7 @@ public class GamePanel extends Panel {
                     }
 
                     // Hang cheo 2
-                    else if (checkWin(i, j, this.turn) == 4){
+                    else if (winResult == 4){
                         for (int a = 1; ; a++) {
                             if (i + a < screenRow - 1 && j - a >= 0) {
                                 if (Board[i + a][j - a] != turn) {
@@ -367,7 +369,7 @@ public class GamePanel extends Panel {
                         historyIndex = -1;
                     }
                     Pair pair = new Pair(i, j);
-                    if (checkWin(i, j, this.turn) != 0){
+                    if (winResult != 0){
                         pair.special = true;
                         pair.winX1 = startX;
                         pair.winY1 = startY;
@@ -376,13 +378,19 @@ public class GamePanel extends Panel {
                     }
                     if (history.size() == 100){
                         history.remove(0);
+                        historyIndex--;
                     }
                     history.add(pair);
 
                     historyIndex ++;
 
                     checkTie ++;
-                    if (checkWin(i, j, this.turn) > 0 || checkTie == 312){
+                    if (winResult > 0){
+                        winner = turn;
+                        end = true;
+                    }
+                    else if (checkTie == 312){
+                        winner = 0;
                         end = true;
                     }
                     turn = turn * -1;
@@ -396,6 +404,10 @@ public class GamePanel extends Panel {
     public void paintComponent(Graphics g){
         super.paintComponent(g);
         Graphics2D g2D =(Graphics2D) g;
+        boolean hasWinningLine = winner != 0
+                && historyIndex == history.size() - 1
+                && historyIndex != -1
+                && history.get(historyIndex).special;
         menuButton.draw(g2D);
         undoButton.draw(g2D);
         redoButton.draw(g2D);
@@ -413,12 +425,12 @@ public class GamePanel extends Panel {
                 }
             }
         }
-        if (end && turn == -1){
+        if (end && winner == 1){
             g2D.setColor(new Color(244, 67, 54));
             g2D.setFont(arial_40);
             g2D.drawString("X Wins!", 11 * tileSize, (3 * tileSize) / 4);
         }
-        else if (end && turn == 1){
+        else if (end && winner == -1){
             g2D.setColor(new Color(3, 169, 244));
             g2D.setFont(arial_40);
             g2D.drawString("O Wins!", 11 * tileSize, (3 * tileSize) / 4);
@@ -438,12 +450,6 @@ public class GamePanel extends Panel {
                 g2D.setFont(arial_40);
                 g2D.drawString("O's Turn", 11 * tileSize, (3 * tileSize) / 4);
             }
-        }
-        if (gamePanelState != 0) {
-            g2D.setColor(new Color(255, 255, 255));
-            g2D.setFont(new Font("Arial", Font.PLAIN, 18));
-            String status = botThinking ? "Bot: thinking..." : "Bot: " + botStatus;
-            g2D.drawString(status, 3 * tileSize, (3 * tileSize) / 4);
         }
         if (historyIndex == history.size() - 1 && historyIndex != -1) {
             if (history.get(historyIndex).special) {
