@@ -1,91 +1,91 @@
 # X-O
 
-Du an game caro (X-O) viet bang Java Swing, co bot su dung minimax + alpha-beta va nhieu lop toi uu de giu toc do nhanh ngay ca khi bot-vs-bot.
+Dự án game caro (X-O) viết bằng Java Swing, có bot sử dụng minimax + alpha-beta và nhiều lớp tối ưu để giữ tốc độ nhanh ngay cả khi bot-vs-bot.
 
-## Tong quan bot
+## Tổng quan bot
 
-Bot nam o file `src/Bot/Own.java`.
+Bot nằm ở file `src/Bot/Own.java`.
 
-Muc tieu cua bot:
-- Tim nuoc di tot trong thoi gian ngan.
-- Van phong thu/tan cong on trong cac the co nguy hiem.
-- Giu chi phi tinh toan thap de game chay muot.
+Mục tiêu của bot:
+- Tìm nước đi tốt trong thời gian ngắn.
+- Vẫn phòng thủ/tấn công ổn trong các thế cờ nguy hiểm.
+- Giữ chi phí tính toán thấp để game chạy mượt.
 
-Luot xu ly chinh cho moi nuoc di:
-1. Khoi tao `frontier` tu trang thai ban hien tai (`initializeFrontierState`).
-2. Kiem tra tactical ngay lap tuc: neu bot co nuoc thang ngay thi danh ngay, neu doi thu co nuoc thang ngay thi chan ngay.
-3. Sinh tap nuoc ung vien tu `frontier` (`getAvailableMoves`).
-4. Sap xep nuoc di (move ordering).
-5. Chay minimax + alpha-beta + transposition table.
-6. Chon nuoc co diem tot nhat.
+Luồng xử lý chính cho mỗi nước đi:
+1. Khởi tạo `frontier` từ trạng thái bàn hiện tại (`initializeFrontierState`).
+2. Kiểm tra tactical ngay lập tức: nếu bot có nước thắng ngay thì đánh ngay, nếu đối thủ có nước thắng ngay thì chặn ngay.
+3. Sinh tập nước ứng viên từ `frontier` (`getAvailableMoves`).
+4. Sắp xếp nước đi (move ordering).
+5. Chạy minimax + alpha-beta + transposition table.
+6. Chọn nước có điểm tốt nhất.
 
-## Minimax va leaf evaluation
+## Minimax và leaf evaluation
 
-Bot dung minimax voi alpha-beta pruning.
+Bot dùng minimax với alpha-beta pruning.
 
-Leaf evaluation (khi depth = 0 hoac het nuoc) duoc tinh bang:
+Leaf evaluation (khi depth = 0 hoặc hết nước) được tính bằng:
 - `evaluateBoard(botTurn) = botScore - 1.2 * opponentScore`
 
-Trong do moi ben duoc cham diem theo pattern:
-- 5 lien tiep: `10_000_000`
-- 4 mo 2 dau: `500_000`
-- 4 mo 1 dau: `50_000`
-- 3 mo 2 dau: `20_000`
-- 3 mo 1 dau: `2_000`
-- 2 mo 2 dau: `500`
-- 2 mo 1 dau: `50`
-- 1 mo 2 dau: `10`
+Trong đó mỗi bên được chấm điểm theo pattern:
+- 5 liên tiếp: `10_000_000`
+- 4 mở 2 đầu: `500_000`
+- 4 mở 1 đầu: `50_000`
+- 3 mở 2 đầu: `20_000`
+- 3 mở 1 đầu: `2_000`
+- 2 mở 2 đầu: `500`
+- 2 mở 1 đầu: `50`
+- 1 mở 2 đầu: `10`
 
-Huong duyet pattern: ngang, doc, cheo chinh, cheo phu.
+Hướng duyệt pattern: ngang, dọc, chéo chính, chéo phụ.
 
-## Cac toi uu da ap dung
+## Các tối ưu đã áp dụng
 
 ### 1) Alpha-beta pruning
-- Cat nhanh nhanh khong can thiet khi `beta <= alpha`.
-- Giam so node phai mo rong so voi minimax thuan.
+- Cắt nhánh không cần thiết khi `beta <= alpha`.
+- Giảm số node phải mở rộng so với minimax thuần.
 
 ### 2) Tactical short-circuit
-- Thang ngay / chan thua ngay duoc xu ly truoc minimax.
-- Tranh bo sot cac tinh huong "bat buoc".
+- Thắng ngay / chặn thua ngay được xử lý trước minimax.
+- Tránh bỏ sót các tình huống “bắt buộc”.
 
 ### 3) Move ordering
-- Nuoc di duoc sap xep theo `quickMoveOrderScore`.
-- Uu tien cao cho nuoc thang ngay, nuoc chan thua ngay, nuoc tao threat manh (`linePotentialScore`) va nuoc co nhieu hang xom (`neighborScore`).
-- Sap xep tot giup alpha-beta cat nhanh hon rat nhieu.
+- Nước đi được sắp xếp theo `quickMoveOrderScore`.
+- Ưu tiên cao cho nước thắng ngay, nước chặn thua ngay, nước tạo threat mạnh (`linePotentialScore`) và nước có nhiều hàng xóm (`neighborScore`).
+- Sắp xếp tốt giúp alpha-beta cắt nhanh hơn rất nhiều.
 
 ### 4) Incremental candidate frontier
-Thay vi quet toan bo ban moi node:
-- Bot duy tri `frontierCells` (o trong gan khu vuc co quan).
-- Moi lan `applyMove/undoMove` chi update vung quanh nuoc vua danh (ban kinh `SEARCH_RADIUS = 2`).
-- `getAvailableMoves` lay truc tiep tu frontier.
+Thay vì quét toàn bộ bàn mỗi node:
+- Bot duy trì `frontierCells` (ô trống gần khu vực có quân).
+- Mỗi lần `applyMove/undoMove` chỉ update vùng quanh nước vừa đánh (bán kính `SEARCH_RADIUS = 2`).
+- `getAvailableMoves` lấy trực tiếp từ frontier.
 
-Loi ich:
-- Giam chi phi sinh nuoc trong de quy.
-- Tang toc do ro trong bot-vs-bot.
+Lợi ích:
+- Giảm chi phí sinh nước trong đệ quy.
+- Tăng tốc độ rõ trong bot-vs-bot.
 
 ### 5) Transposition Table + Zobrist Hash
-- Moi trang thai ban co duoc bam hash boi Zobrist.
-- Cache ket qua node minimax voi 3 loai co: `EXACT`, `LOWER_BOUND`, `UPPER_BOUND`.
-- Tai su dung ket qua node da tinh o cac nhanh khac.
-- Co gioi han kich thuoc bang cache (`TT_MAX_SIZE`) de tranh phinh bo nho.
+- Mỗi trạng thái bàn cờ được băm hash bởi Zobrist.
+- Cache kết quả node minimax với 3 loại cờ: `EXACT`, `LOWER_BOUND`, `UPPER_BOUND`.
+- Tái sử dụng kết quả node đã tính ở các nhánh khác.
+- Có giới hạn kích thước bảng cache (`TT_MAX_SIZE`) để tránh phình bộ nhớ.
 
 ### 6) Cached move promotion
-- Neu TT co nuoc tot nhat cua node, dua nuoc do len dau danh sach duyet.
-- Giu move ordering ngay ca khi de quy sau.
+- Nếu TT có nước tốt nhất của node, đưa nước đó lên đầu danh sách duyệt.
+- Giữ move ordering tốt ngay cả khi đệ quy sâu.
 
 ### 7) Dynamic search depth
-Depth khong co dinh:
-- Dau van: depth 2
-- Giua van: depth 3
-- Cuoi van (it candidate): depth 4
+Depth không cố định:
+- Đầu ván: depth 2
+- Giữa ván: depth 3
+- Cuối ván (ít candidate): depth 4
 
-Muc tieu:
-- Dau game giu toc do.
-- Cuoi game tang do chinh xac.
+Mục tiêu:
+- Đầu game giữ tốc độ.
+- Cuối game tăng độ chính xác.
 
-## Cac hang so quan trong (de tune)
+## Các hằng số quan trọng (để tune)
 
-Nam trong `src/Bot/Own.java`:
+Nằm trong `src/Bot/Own.java`:
 - `MAX_CANDIDATE_MOVES = 32`
 - `SEARCH_RADIUS = 2`
 - `EARLY_GAME_DEPTH = 2`
@@ -93,28 +93,29 @@ Nam trong `src/Bot/Own.java`:
 - `LATE_GAME_DEPTH = 4`
 - `TT_MAX_SIZE = 400_000`
 
-Neu muon bot manh hon:
-- Tang `MAX_CANDIDATE_MOVES` hoac depth (doi lai cham hon).
+Nếu muốn bot mạnh hơn:
+- Tăng `MAX_CANDIDATE_MOVES` hoặc depth (đổi lại chậm hơn).
 
-Neu muon bot mat hon:
-- Giam `MAX_CANDIDATE_MOVES`, giam depth hoac giam `TT_MAX_SIZE`.
+Nếu muốn bot mát hơn:
+- Giảm `MAX_CANDIDATE_MOVES`, giảm depth hoặc giảm `TT_MAX_SIZE`.
 
-## Chay project
+## Chạy project
 
 ### Trong VS Code
-1. Cai extension `Extension Pack for Java`.
-2. Mo thu muc project.
-3. Chon cau hinh Run/Debug `Run X-O`.
-4. Nhan `F5`.
+1. Cài extension `Extension Pack for Java`.
+2. Mở thư mục project.
+3. Chọn cấu hình Run/Debug `Run X-O`.
+4. Nhấn `F5`.
 
-### Bang terminal
+### Bằng terminal
 ```bash
 mkdir -p out
 javac -d out $(find src -name "*.java")
 java -cp out:src main.Main
 ```
 
-## Ghi chu hien tai
+## Ghi chú hiện tại
 
-- Bot da manh hon ban goc rat nhieu nho tactical + evaluation + ordering + cache.
-- Bot-vs-bot van co the dung CPU cao do minimax de quy lien tuc, nhung da duoc toi uu tinh toan dang ke so voi ban dau.
+- Bot đã mạnh hơn bản gốc rất nhiều nhờ tactical + evaluation + ordering + cache.
+- Bot-vs-bot vẫn có thể dùng CPU cao do minimax đệ quy liên tục, nhưng đã được tối ưu tính toán đáng kể so với bản đầu.
+
