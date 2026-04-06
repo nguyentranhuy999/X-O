@@ -20,6 +20,20 @@ public class CellButton extends Button{
     }
 
     @Override
+    public void buttonUpdate() {
+        boolean isBotTurn = (panel.gamePanelState == 1 && panel.turn == -1)
+                || (panel.gamePanelState == 2 && panel.turn == 1)
+                || (panel.gamePanelState == 3);
+        if (isBotTurn) {
+            mouseHandle.click = false;
+            mouseHandle.enter = false;
+            mouseHandle.exit = false;
+            return;
+        }
+        super.buttonUpdate();
+    }
+
+    @Override
     public void functionUpdate() {
         if (button){
             if (panel.end){
