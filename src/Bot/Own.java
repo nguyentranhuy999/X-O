@@ -9,6 +9,8 @@ import java.util.Set;
 
 
 public class Own {
+    private static final int SEARCH_DEPTH = 2;
+    private static final int MAX_CANDIDATE_MOVES = 16;
     GamePanel panel;
 
     public Own (GamePanel panel){
@@ -58,6 +60,11 @@ public class Own {
                     }
                 }
             }
+        }
+        availableMoves.sort(Comparator.comparingInt((Pair<Integer, Integer> move) ->
+                -neighborScore(move.first, move.second)));
+        if (availableMoves.size() > MAX_CANDIDATE_MOVES) {
+            return new ArrayList<>(availableMoves.subList(0, MAX_CANDIDATE_MOVES));
         }
         return availableMoves;
     }
