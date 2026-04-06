@@ -21,10 +21,20 @@ public class Own {
 
     public void update(int botTurn){
         if (!panel.end) {
+            panel.botThinking = true;
+            panel.botStatus = "thinking";
+            long startMs = System.currentTimeMillis();
             Pair<Integer, Integer> move = bestMove(botTurn);
+            long elapsedMs = System.currentTimeMillis() - startMs;
             if (move.first >= 0 && move.second >= 0) {
+                panel.botStatus = "doing (" + elapsedMs + "ms)";
+                System.out.println("Bot thinking time: " + elapsedMs + "ms. Move: (" + move.first + ", " + move.second + ")");
                 panel.cellButtons[move.first][move.second].button = true;
+            } else {
+                panel.botStatus = "no valid move";
+                System.out.println("Bot has no valid move.");
             }
+            panel.botThinking = false;
         }
     }
 

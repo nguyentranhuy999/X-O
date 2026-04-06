@@ -28,6 +28,8 @@ public class GamePanel extends Panel {
     public int startY = -1;
     public int endX = -1;
     public int endY = -1;
+    public boolean botThinking = false;
+    public String botStatus = "";
 
     Own own = new Own(this);
 
@@ -427,6 +429,12 @@ public class GamePanel extends Panel {
                 g2D.setFont(arial_40);
                 g2D.drawString("O's Turn", 11 * tileSize, (3 * tileSize) / 4);
             }
+        }
+        if (gamePanelState != 0) {
+            g2D.setColor(new Color(255, 255, 255));
+            g2D.setFont(new Font("Arial", Font.PLAIN, 18));
+            String status = botThinking ? "Bot: thinking..." : "Bot: " + botStatus;
+            g2D.drawString(status, 3 * tileSize, (3 * tileSize) / 4);
         }
         if (historyIndex == history.size() - 1 && historyIndex != -1) {
             if (history.get(historyIndex).special) {
