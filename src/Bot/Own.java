@@ -4,6 +4,7 @@ import main.GamePanel;
 import main.Pair;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -11,6 +12,7 @@ import java.util.Set;
 public class Own {
     private static final int SEARCH_DEPTH = 2;
     private static final int MAX_CANDIDATE_MOVES = 16;
+    private static final int SEARCH_RADIUS = 2;
     GamePanel panel;
 
     public Own (GamePanel panel){
@@ -40,8 +42,8 @@ public class Own {
             move2 = panel.history.get(panel.history.size() - 2);
         }
 
-        for (int i = move1.first - 5; i <= move1.first + 5; i++){
-            for (int j = move1.second - 5; j <= move1.second + 5; j++){
+        for (int i = move1.first - SEARCH_RADIUS; i <= move1.first + SEARCH_RADIUS; i++){
+            for (int j = move1.second - SEARCH_RADIUS; j <= move1.second + SEARCH_RADIUS; j++){
                 if (i >= 0 && i < panel.screenRow - 1 && j >= 0 && j < panel.screenCol && panel.Board[i][j] == 0){
                     String key = i + "," + j;
                     if (visited.add(key)) {
@@ -51,8 +53,8 @@ public class Own {
             }
         }
 
-        for (int i = move2.first - 5; i <= move2.first + 5; i++){
-            for (int j = move2.second - 5; j <= move2.second + 5; j++){
+        for (int i = move2.first - SEARCH_RADIUS; i <= move2.first + SEARCH_RADIUS; i++){
+            for (int j = move2.second - SEARCH_RADIUS; j <= move2.second + SEARCH_RADIUS; j++){
                 if (i >= 0 && i < panel.screenRow - 1 && j >= 0 && j < panel.screenCol && panel.Board[i][j] == 0){
                     String key = i + "," + j;
                     if (visited.add(key)) {
@@ -67,6 +69,23 @@ public class Own {
             return new ArrayList<>(availableMoves.subList(0, MAX_CANDIDATE_MOVES));
         }
         return availableMoves;
+    }
+
+    private int neighborScore(int i, int j) {
+        int score = 0;
+        for (int di = -1; di <= 1; di++) {
+            for (int dj = -1; dj <= 1; dj++) {
+                if (di == 0 && dj == 0) {
+                    continue;
+                }
+                int ni = i + di;
+                int nj = j + dj;
+                if (ni >= 0 && ni < panel.screenRow - 1 && nj >= 0 && nj < panel.screenCol && panel.Board[ni][nj] != 0) {
+                    score++;
+                }
+            }
+        }
+        return score;
     }
 
     public int minimax(int depth, int alpha, int beta, int currentTurn, int botTurn){
@@ -126,7 +145,7 @@ public class Own {
                 panel.Board[move.first][move.second] = 0;
                 return move;
             }
-            int moveVal = minimax(3, -1000, 1000, -botTurn, botTurn);
+            int moveVal = minimax(SEARCH_DEPTH, -1000, 1000, -botTurn, botTurn);
             panel.Board[move.first][move.second] = 0;
 
             if (moveVal > bestVal) {
